@@ -61,6 +61,12 @@ public class LevelScreen extends BaseScreen {
 			new Coin( (float)props.get("x"), (float)props.get("y"), mainStage);
 		}
 
+		for (MapObject obj : tma.getTileList("Flyer")) {
+
+			MapProperties props = obj.getProperties();
+			new Flyer( (float)props.get("x"), (float)props.get("y"), mainStage);
+		}
+
 		MapObject treasureTile = tma.getTileList("Treasure").get(0);
 		MapProperties treasureProps = treasureTile.getProperties();
 		treasure = new Treasure( (float)treasureProps.get("x"), (float)treasureProps.get("y"), mainStage);
@@ -132,6 +138,15 @@ public class LevelScreen extends BaseScreen {
 
 			for (BaseActor solid : BaseActor.getList(mainStage, "TQ.Solid")){
 				hero.preventOverlap(solid);
+
+				for (BaseActor flyer : BaseActor.getList(mainStage, "TQ.Flyer")) {
+
+					if (flyer.overlaps(solid)) {
+
+						flyer.preventOverlap(solid);
+						flyer.setMotionAngle( flyer.getMotionAngle() + 180 );
+					}
+				}
 			}
 		}
 
@@ -141,6 +156,22 @@ public class LevelScreen extends BaseScreen {
 
 				coin.remove();
 				coins++;
+			}
+		}
+
+		for ( BaseActor flyer : BaseActor.getList(mainStage, "TQ.Flyer") ) {
+
+			if ( hero.overlaps(flyer) ) {
+
+				hero.preventOverlap(flyer);
+				flyer.setMotionAngle( flyer.getMotionAngle() + 180 );
+				Vector2 heroPosition 	= new Vector2( hero.getX(), hero.getY() );
+				Vector2 flyerPosition 	= new Vector2( flyer.getX(), flyer.getY() );
+				Vector2 hitVector 		= heroPosition.sub( flyerPosition );
+				hero.setMotionAngle( hitVector.angle() );
+				//flyer.setSpeed(500);
+				hero.setSpeed(500);
+				health--;
 			}
 		}
 
@@ -170,6 +201,17 @@ public class LevelScreen extends BaseScreen {
 
 				if (sword.overlaps(bush))
 					bush.remove();
+			}
+
+			for (BaseActor flyer : BaseActor.getList(mainStage, "TQ.Flyer")) {
+
+				if (sword.overlaps(flyer)) {
+					flyer.remove();
+					Coin coin = new Coin(0,0, mainStage);
+					coin.centerAtActor(flyer);
+					Smoke smoke = new Smoke(0, 0, mainStage);
+					smoke.centerAtActor(flyer);
+				}
 			}
 		}
 
