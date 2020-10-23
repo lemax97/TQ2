@@ -9,10 +9,10 @@ public class Flyer extends BaseActor {
 
         super(x, y, s);
         loadAnimationFromSheet( "assets/enemy-flyer.png", 1, 4, 0.05f, true);
-        setSize( 48, 48);
+        setSize(48, 48);
         setBoundaryPolygon(6);
 
-        setSpeed( MathUtils.random( 50, 80 ) );
+        setSpeed( MathUtils.random(50, 80));
         setMotionAngle( MathUtils.random(0, 360) );
     }
 
@@ -20,7 +20,7 @@ public class Flyer extends BaseActor {
 
         super.act(dt);
         if ( MathUtils.random(1, 120) == 1)
-            setMotionAngle( MathUtils.random(0, 360) );
+            setMotionAngle( MathUtils.random(0, 360));
 
         applyPhysics(dt);
         boundToWorld();

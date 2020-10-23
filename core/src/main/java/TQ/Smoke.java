@@ -9,7 +9,7 @@ public class Smoke extends BaseActor {
 
         super(x, y, s);
         loadTexture("assets/smoke.png");
-        addAction( Actions.fadeOut(0.5f));
+        addAction( Actions.fadeOut(0.5f) );
         addAction( Actions.after( Actions.removeActor() ));
     }
 }
