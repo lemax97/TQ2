@@ -71,6 +71,14 @@ public class LevelScreen extends BaseScreen {
 		MapProperties treasureProps = treasureTile.getProperties();
 		treasure = new Treasure( (float)treasureProps.get("x"), (float)treasureProps.get("y"), mainStage);
 
+		for (MapObject obj : tma.getTileList("NPC")) {
+
+			MapProperties props = obj.getProperties();
+			NPC s = new NPC( (float)props.get("x"), (float)props.get("y"), mainStage);
+			s.setID( (String)props.get("id") );
+			s.setText( (String)props.get("text") );
+		}
+
 		MapObject startPoint = tma.getRectangleList("Start").get(0);
 		MapProperties startProps = startPoint.getProperties();
 		hero = new Hero( (float)startProps.get("x"), (float)startProps.get("y"), mainStage);
@@ -191,10 +199,31 @@ public class LevelScreen extends BaseScreen {
 				if (sword.overlaps(flyer)) {
 
 					flyer.remove();
-					Coin coin = new Coin(0,0, mainStage);
-					coin.centerAtActor(flyer);
-					Smoke smoke = new Smoke(0,0, mainStage);
-					smoke.centerAtActor(flyer);
+					flyerDeath(flyer);
+				}
+			}
+		}
+
+		for (BaseActor arrow : BaseActor.getList(mainStage, "TQ.Arrow")) {
+
+			for (BaseActor flyer : BaseActor.getList(mainStage, "TQ.Flyer")) {
+
+				if (arrow.overlaps(flyer)) {
+
+					flyer.remove();
+					arrow.remove();
+					flyerDeath(flyer);
+				}
+			}
+
+			for (BaseActor solid : BaseActor.getList(mainStage, "TQ.Solid")) {
+
+				if (arrow.overlaps(solid)) {
+
+					arrow.preventOverlap(solid);
+					arrow.setSpeed(0);
+					arrow.addAction( Actions.fadeOut(0.5f) );
+					arrow.addAction( Actions.after( Actions.removeActor() ) );
 				}
 			}
 		}
@@ -203,6 +232,56 @@ public class LevelScreen extends BaseScreen {
 
 			if ( hero.overlaps(flyer)) {
 
+				hero.preventOverlap(flyer);
+				flyer.setMotionAngle( flyer.getMotionAngle() + 180);
+				Vector2 heroPosition = new Vector2( hero.getX(), hero.getY() );
+				Vector2 flyerPosition = new Vector2( flyer.getX(), flyer.getY() );
+				Vector2 hitVector = heroPosition.sub( flyerPosition );
+				hero.setMotionAngle( hitVector.angle() );
+				hero.setSpeed(500);
+				health--;
+			}
+		}
+
+		for (BaseActor npcActor : BaseActor.getList(mainStage, "TQ.NPC")) {
+
+			NPC npc = (NPC) npcActor;
+			hero.preventOverlap(npc);
+			boolean nearby = hero.isWithinDistance(4, npc);
+
+			if ( nearby && !npc.isViewing()) {
+
+				// check NPC ID for dynamic text
+				if ( npc.getID().equals("Gatekeeper")) {
+
+					int flyerCount = BaseActor.count(mainStage, "TQ.Flyer");
+					String message = "Destroy the Flyers and you can have the treasure. ";
+					if ( flyerCount > 1 )
+						message += "There are " + flyerCount + " left.";
+					else if (flyerCount == 1)
+						message += "There is " + flyerCount + " left.";
+					else // flyerCount == 0
+					{
+						message = "You complete your mission. It is yours!";
+						npc.addAction( Actions.fadeOut(5.0f) );
+						npc.addAction( Actions.after( Actions.moveBy(-10000, -10000)));
+					}
+
+					dialogBox.setText(message);
+				}
+				else {
+					dialogBox.setText( npc.getText() );
+				}
+
+				dialogBox.setVisible( true );
+				npc.setViewing( true);
+			}
+
+			if ( !nearby && npc.isViewing()) {
+
+				dialogBox.setText( " " );
+				dialogBox.setVisible( false );
+				npc.setViewing(false);
 			}
 		}
 
@@ -254,6 +333,28 @@ public class LevelScreen extends BaseScreen {
 			sword.toFront();
 	}
 
+	public void shootArrow(){
+
+		if ( arrows <= 0)
+			return;
+
+		arrows--;
+
+		Arrow arrow = new Arrow(0,0, mainStage);
+		arrow.centerAtActor(hero);
+		arrow.setRotation( hero.getFacingAngle() );
+		arrow.setMotionAngle( hero.getFacingAngle() );
+	}
+
+	public void flyerDeath(BaseActor flyer){
+
+		flyer.remove();
+		Coin coin = new Coin(0,0,mainStage);
+		coin.centerAtActor(flyer);
+		Smoke smoke = new Smoke(0,0,mainStage);
+		smoke.centerAtActor(flyer);
+	}
+
 	@Override
 	public boolean keyDown(int keycode) {
 
@@ -262,6 +363,9 @@ public class LevelScreen extends BaseScreen {
 
 		if (keycode == Keys.S)
 			swingSword();
+
+		if (keycode == Keys.A)
+			shootArrow();
 
 		return false;
 	}
