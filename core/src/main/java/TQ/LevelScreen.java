@@ -14,6 +14,8 @@ public class LevelScreen extends BaseScreen {
 	Hero hero;
 	Sword sword;
 	Treasure treasure;
+	ShopArrow shopArrow;
+	ShopHeart shopHeart;
 
 	int health;
 	int coins;
@@ -85,6 +87,14 @@ public class LevelScreen extends BaseScreen {
 
 		sword = new Sword(0,0, mainStage);
 		sword.setVisible(false);
+
+		MapObject shopHeartTile = tma.getTileList("ShopHeart").get(0);
+		MapProperties shopHeartProps = shopHeartTile.getProperties();
+		shopHeart = new ShopHeart( (float)shopHeartProps.get("x"), (float)shopHeartProps.get("y"), mainStage);
+
+		MapObject shopArrowTile = tma.getTileList("ShopArrow").get(0);
+		MapProperties shopArrowProps = shopArrowTile.getProperties();
+		shopArrow = new ShopArrow( (float)shopArrowProps.get("x"), (float)shopArrowProps.get("y"), mainStage);
 
 		healthLabel = new Label(" x " + health, BaseGame.labelStyle);
 		healthLabel.setColor(Color.PINK);
@@ -238,6 +248,7 @@ public class LevelScreen extends BaseScreen {
 				Vector2 flyerPosition = new Vector2( flyer.getX(), flyer.getY() );
 				Vector2 hitVector = heroPosition.sub( flyerPosition );
 				hero.setMotionAngle( hitVector.angle() );
+				hero.addAction(Actions.moveTo(hero.getX() + 50, hero.getY() + 50, 0.1f));
 				hero.setSpeed(500);
 				health--;
 			}
@@ -366,6 +377,22 @@ public class LevelScreen extends BaseScreen {
 
 		if (keycode == Keys.A)
 			shootArrow();
+
+		if (keycode == Keys.B) {
+
+			if (hero.overlaps(shopHeart) && coins >= 3) {
+
+				coins -= 3;
+				health += 1;
+			}
+
+			if (hero.overlaps(shopArrow) && coins >= 4) {
+
+				coins -= 4;
+				arrows += 3;
+			}
+
+		}
 
 		return false;
 	}
